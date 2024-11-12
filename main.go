@@ -164,12 +164,32 @@ func main() {
 		binlogSizes = append(binlogSizes, float64(binlogSize)/1024)
 	}
 
+	// 计算 JSON 和 Binlog 的性能提升百分比
+	serializeImprovement := calculateImprovementPercentage(jsonSerializeTimes, binlogSerializeTimes)
+	deserializeImprovement := calculateImprovementPercentage(jsonDeserializeTimes, binlogDeserializeTimes)
+	sizeImprovement := calculateImprovementPercentage(jsonSizes, binlogSizes)
+
 	// Create charts
 	page := components.NewPage()
+	page.SetLayout(components.PageFlexLayout)
+
 	page.AddCharts(
 		createLineChart(recordCounts, jsonSerializeTimes, binlogSerializeTimes, "Average Serialization Time", "Time (seconds)"),
+	)
+	page.AddCharts(
 		createLineChart(recordCounts, jsonDeserializeTimes, binlogDeserializeTimes, "Average Deserialization Time", "Time (seconds)"),
+	)
+	page.AddCharts(
 		createLineChart(recordCounts, jsonSizes, binlogSizes, "File Size Comparison", "Size (KB)"),
+	)
+	page.AddCharts(
+		createLineChart(recordCounts, serializeImprovement, []float64{}, "Serialization Improvement Percentage (Binlog over JSON)", "Improvement (%)"),
+	)
+	page.AddCharts(
+		createLineChart(recordCounts, deserializeImprovement, []float64{}, "Deserialization Improvement Percentage (Binlog over JSON)", "Improvement (%)"),
+	)
+	page.AddCharts(
+		createLineChart(recordCounts, sizeImprovement, []float64{}, "File Size Reduction Percentage (Binlog over JSON)", "Reduction (%)"),
 	)
 
 	// Use os.Create instead of open
