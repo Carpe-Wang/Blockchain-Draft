@@ -20,7 +20,7 @@ type Record struct {
 	Value string `json:"value"`
 }
 
-// 生成随机记录数据
+// Generate random record data
 func generateRecords(count int) []Record {
 	records := make([]Record, count)
 	for i := 0; i < count; i++ {
@@ -33,7 +33,7 @@ func generateRecords(count int) []Record {
 	return records
 }
 
-// JSON序列化并计算大小
+// JSON serialization and calculate size
 func jsonSerialize(records []Record) ([]byte, time.Duration) {
 	start := time.Now()
 	data, _ := json.Marshal(records)
@@ -41,7 +41,7 @@ func jsonSerialize(records []Record) ([]byte, time.Duration) {
 	return data, duration
 }
 
-// JSON反序列化并计时
+// JSON deserialization and timing
 func jsonDeserialize(data []byte) (time.Duration, []Record) {
 	var records []Record
 	start := time.Now()
@@ -50,7 +50,7 @@ func jsonDeserialize(data []byte) (time.Duration, []Record) {
 	return duration, records
 }
 
-// Binlog序列化并计算大小
+// Binlog serialization and calculate size
 func binlogSerialize(records []Record) ([]byte, time.Duration) {
 	var buffer bytes.Buffer
 	start := time.Now()
@@ -65,7 +65,7 @@ func binlogSerialize(records []Record) ([]byte, time.Duration) {
 	return buffer.Bytes(), duration
 }
 
-// Binlog反序列化并计时
+// Binlog deserialization and timing
 func binlogDeserialize(data []byte) (time.Duration, []Record) {
 	buffer := bytes.NewBuffer(data)
 	var records []Record
@@ -84,7 +84,7 @@ func binlogDeserialize(data []byte) (time.Duration, []Record) {
 	return duration, records
 }
 
-// 生成折线图
+// Create a line chart
 func createLineChart(xValues []int, jsonValues, binlogValues []float64, title, yAxisName string) *charts.Line {
 	line := charts.NewLine()
 	line.SetGlobalOptions(
@@ -107,7 +107,7 @@ func generateLineItems(data []float64) []opts.LineData {
 }
 
 func main() {
-	recordCounts := []int{10, 100, 1000, 10000, 20000, 30000, 40000, 50000}
+	recordCounts := []int{10, 100, 1000, 10000, 20000, 30000, 40000, 50000, 60000, 70000}
 	var jsonSerializeTimes, jsonDeserializeTimes []float64
 	var binlogSerializeTimes, binlogDeserializeTimes []float64
 	var jsonSizes, binlogSizes []float64
@@ -120,33 +120,33 @@ func main() {
 		var jsonSize, binlogSize int
 
 		for i := 0; i < 10; i++ {
-			// JSON 序列化与反序列化
+			// JSON serialization and deserialization
 			jsonData, jsonSerializeTime := jsonSerialize(records)
 			jsonDeserializeTime, _ := jsonDeserialize(jsonData)
 			totalJsonSerializeTime += jsonSerializeTime
 			totalJsonDeserializeTime += jsonDeserializeTime
-			jsonSize = len(jsonData) // 数据大小只需记录一次
+			jsonSize = len(jsonData) // Record size only once
 
-			// Binlog 序列化与反序列化
+			// Binlog serialization and deserialization
 			binlogData, binlogSerializeTime := binlogSerialize(records)
 			binlogDeserializeTime, _ := binlogDeserialize(binlogData)
 			totalBinlogSerializeTime += binlogSerializeTime
 			totalBinlogDeserializeTime += binlogDeserializeTime
-			binlogSize = len(binlogData) // 数据大小只需记录一次
+			binlogSize = len(binlogData) // Record size only once
 		}
 
-		// 计算平均值并转换为秒
+		// Calculate average and convert to seconds
 		jsonSerializeTimes = append(jsonSerializeTimes, totalJsonSerializeTime.Seconds()/10)
 		jsonDeserializeTimes = append(jsonDeserializeTimes, totalJsonDeserializeTime.Seconds()/10)
 		binlogSerializeTimes = append(binlogSerializeTimes, totalBinlogSerializeTime.Seconds()/10)
 		binlogDeserializeTimes = append(binlogDeserializeTimes, totalBinlogDeserializeTime.Seconds()/10)
 
-		// 记录文件大小（单位转换为 KB）
+		// Record file sizes (convert to KB)
 		jsonSizes = append(jsonSizes, float64(jsonSize)/1024)
 		binlogSizes = append(binlogSizes, float64(binlogSize)/1024)
 	}
 
-	// 创建图表
+	// Create charts
 	page := components.NewPage()
 	page.AddCharts(
 		createLineChart(recordCounts, jsonSerializeTimes, binlogSerializeTimes, "Average Serialization Time", "Time (seconds)"),
@@ -154,7 +154,7 @@ func main() {
 		createLineChart(recordCounts, jsonSizes, binlogSizes, "File Size Comparison", "Size (KB)"),
 	)
 
-	// 使用 os.Create 替代 open
+	// Use os.Create instead of open
 	f, err := os.Create("serialization_deserialization_chart.html")
 
 	if err != nil {
@@ -164,6 +164,7 @@ func main() {
 	defer f.Close()
 	page.Render(f)
 
+	// Get and print the file path
 	currentDir, err := os.Getwd()
 	if err != nil {
 		fmt.Println("Failed to get current directory:", err)
