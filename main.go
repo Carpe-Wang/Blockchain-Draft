@@ -183,13 +183,13 @@ func main() {
 		createLineChart(recordCounts, jsonSizes, binlogSizes, "File Size Comparison", "Size (KB)"),
 	)
 	page.AddCharts(
-		createLineChart(recordCounts, serializeImprovement, []float64{}, "Serialization Improvement Percentage (Binlog over JSON)", "Improvement (%)"),
+		createLineChart(recordCounts, serializeImprovement, []float64{}, "Serialization Improvement Percentage ", "Improvement (%)"),
 	)
 	page.AddCharts(
-		createLineChart(recordCounts, deserializeImprovement, []float64{}, "Deserialization Improvement Percentage (Binlog over JSON)", "Improvement (%)"),
+		createLineChart(recordCounts, deserializeImprovement, []float64{}, "Deserialization Improvement Percentage ", "Improvement (%)"),
 	)
 	page.AddCharts(
-		createLineChart(recordCounts, sizeImprovement, []float64{}, "File Size Reduction Percentage (Binlog over JSON)", "Reduction (%)"),
+		createLineChart(recordCounts, sizeImprovement, []float64{}, "File Size Reduction Percentage ", "Reduction (%)"),
 	)
 
 	// Use os.Create instead of open
