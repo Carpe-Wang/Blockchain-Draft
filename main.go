@@ -6,7 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
+
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/components"
+	"github.com/go-echarts/go-echarts/v2/opts"
 )
 
 type Record struct {
@@ -79,21 +84,74 @@ func binlogDeserialize(data []byte) (time.Duration, []Record) {
 	return duration, records
 }
 
+// 生成折线图
+func createLineChart(xValues []int, jsonValues, binlogValues []float64, title, yAxisName string) *charts.Line {
+	line := charts.NewLine()
+	line.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: title}),
+		charts.WithYAxisOpts(opts.YAxis{Name: yAxisName}),
+		charts.WithXAxisOpts(opts.XAxis{Name: "Number of Records"}),
+	)
+	line.SetXAxis(xValues).
+		AddSeries("JSON", generateLineItems(jsonValues)).
+		AddSeries("Binlog", generateLineItems(binlogValues))
+	return line
+}
+
+func generateLineItems(data []float64) []opts.LineData {
+	items := make([]opts.LineData, 0)
+	for _, v := range data {
+		items = append(items, opts.LineData{Value: v})
+	}
+	return items
+}
+
 func main() {
-	for _, count := range []int{10, 100, 1000, 10000} {
-		fmt.Printf("\n=== %d records ===\n", count)
+	recordCounts := []int{10, 100, 1000, 10000}
+	var jsonSerializeTimes, jsonDeserializeTimes []float64
+	var binlogSerializeTimes, binlogDeserializeTimes []float64
+
+	for _, count := range recordCounts {
 		records := generateRecords(count)
 
-		// JSON 序列化与反序列化
-		jsonData, jsonSerializeTime := jsonSerialize(records)
-		jsonDeserializeTime, _ := jsonDeserialize(jsonData)
-		fmt.Printf("JSON - Size: %d bytes, Serialize Time: %v, Deserialize Time: %v\n",
-			len(jsonData), jsonSerializeTime, jsonDeserializeTime)
+		var totalJsonSerializeTime, totalJsonDeserializeTime time.Duration
+		var totalBinlogSerializeTime, totalBinlogDeserializeTime time.Duration
 
-		// Binlog 序列化与反序列化
-		binlogData, binlogSerializeTime := binlogSerialize(records)
-		binlogDeserializeTime, _ := binlogDeserialize(binlogData)
-		fmt.Printf("Binlog - Size: %d bytes, Serialize Time: %v, Deserialize Time: %v\n",
-			len(binlogData), binlogSerializeTime, binlogDeserializeTime)
+		for i := 0; i < 10; i++ {
+			// JSON 序列化与反序列化
+			jsonData, jsonSerializeTime := jsonSerialize(records)
+			jsonDeserializeTime, _ := jsonDeserialize(jsonData)
+			totalJsonSerializeTime += jsonSerializeTime
+			totalJsonDeserializeTime += jsonDeserializeTime
+
+			// Binlog 序列化与反序列化
+			binlogData, binlogSerializeTime := binlogSerialize(records)
+			binlogDeserializeTime, _ := binlogDeserialize(binlogData)
+			totalBinlogSerializeTime += binlogSerializeTime
+			totalBinlogDeserializeTime += binlogDeserializeTime
+		}
+
+		// 计算平均值并转换为秒
+		jsonSerializeTimes = append(jsonSerializeTimes, totalJsonSerializeTime.Seconds()/10)
+		jsonDeserializeTimes = append(jsonDeserializeTimes, totalJsonDeserializeTime.Seconds()/10)
+		binlogSerializeTimes = append(binlogSerializeTimes, totalBinlogSerializeTime.Seconds()/10)
+		binlogDeserializeTimes = append(binlogDeserializeTimes, totalBinlogDeserializeTime.Seconds()/10)
 	}
+
+	// 创建图表
+	page := components.NewPage()
+	page.AddCharts(
+		createLineChart(recordCounts, jsonSerializeTimes, binlogSerializeTimes, "Average Serialization Time", "Time (seconds)"),
+		createLineChart(recordCounts, jsonDeserializeTimes, binlogDeserializeTimes, "Average Deserialization Time", "Time (seconds)"),
+	)
+
+	f, err := os.Create("serialization_deserialization_chart.html")
+	if err != nil {
+		fmt.Println("Failed to create file:", err)
+		return
+	}
+	defer f.Close()
+	page.Render(f)
+
+	fmt.Println("Charts generated and saved as serialization_deserialization_chart.html")
 }
