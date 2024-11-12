@@ -107,15 +107,17 @@ func generateLineItems(data []float64) []opts.LineData {
 }
 
 func main() {
-	recordCounts := []int{10, 100, 1000, 10000}
+	recordCounts := []int{10, 100, 1000, 10000, 20000, 30000, 40000, 50000}
 	var jsonSerializeTimes, jsonDeserializeTimes []float64
 	var binlogSerializeTimes, binlogDeserializeTimes []float64
+	var jsonSizes, binlogSizes []float64
 
 	for _, count := range recordCounts {
 		records := generateRecords(count)
 
 		var totalJsonSerializeTime, totalJsonDeserializeTime time.Duration
 		var totalBinlogSerializeTime, totalBinlogDeserializeTime time.Duration
+		var jsonSize, binlogSize int
 
 		for i := 0; i < 10; i++ {
 			// JSON 序列化与反序列化
@@ -123,12 +125,14 @@ func main() {
 			jsonDeserializeTime, _ := jsonDeserialize(jsonData)
 			totalJsonSerializeTime += jsonSerializeTime
 			totalJsonDeserializeTime += jsonDeserializeTime
+			jsonSize = len(jsonData) // 数据大小只需记录一次
 
 			// Binlog 序列化与反序列化
 			binlogData, binlogSerializeTime := binlogSerialize(records)
 			binlogDeserializeTime, _ := binlogDeserialize(binlogData)
 			totalBinlogSerializeTime += binlogSerializeTime
 			totalBinlogDeserializeTime += binlogDeserializeTime
+			binlogSize = len(binlogData) // 数据大小只需记录一次
 		}
 
 		// 计算平均值并转换为秒
@@ -136,6 +140,10 @@ func main() {
 		jsonDeserializeTimes = append(jsonDeserializeTimes, totalJsonDeserializeTime.Seconds()/10)
 		binlogSerializeTimes = append(binlogSerializeTimes, totalBinlogSerializeTime.Seconds()/10)
 		binlogDeserializeTimes = append(binlogDeserializeTimes, totalBinlogDeserializeTime.Seconds()/10)
+
+		// 记录文件大小（单位转换为 KB）
+		jsonSizes = append(jsonSizes, float64(jsonSize)/1024)
+		binlogSizes = append(binlogSizes, float64(binlogSize)/1024)
 	}
 
 	// 创建图表
@@ -143,15 +151,26 @@ func main() {
 	page.AddCharts(
 		createLineChart(recordCounts, jsonSerializeTimes, binlogSerializeTimes, "Average Serialization Time", "Time (seconds)"),
 		createLineChart(recordCounts, jsonDeserializeTimes, binlogDeserializeTimes, "Average Deserialization Time", "Time (seconds)"),
+		createLineChart(recordCounts, jsonSizes, binlogSizes, "File Size Comparison", "Size (KB)"),
 	)
 
+	// 使用 os.Create 替代 open
 	f, err := os.Create("serialization_deserialization_chart.html")
+
 	if err != nil {
 		fmt.Println("Failed to create file:", err)
 		return
 	}
 	defer f.Close()
 	page.Render(f)
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Failed to get current directory:", err)
+		return
+	}
+	filePath := currentDir + "/serialization_deserialization_chart.html"
+	fmt.Printf("Charts generated and saved as: %s\n", filePath)
 
 	fmt.Println("Charts generated and saved as serialization_deserialization_chart.html")
 }
