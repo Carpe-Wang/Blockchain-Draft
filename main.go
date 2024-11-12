@@ -33,8 +33,7 @@ func randomString(length int) string {
 func generateRecords(count int) []Record {
 	records := make([]Record, count)
 	for i := 0; i < count; i++ {
-		// 使用一个较长的字符串来模拟较大的数据
-		largeValue := randomString(100 * rand.Intn(10))
+		largeValue := randomString(10 * rand.Intn(10))
 		records[i] = Record{
 			ID:    i,
 			Name:  fmt.Sprintf("name_%d", i),
@@ -115,6 +114,14 @@ func generateLineItems(data []float64) []opts.LineData {
 		items = append(items, opts.LineData{Value: v})
 	}
 	return items
+}
+
+func calculateImprovementPercentage(jsonTimes, binlogTimes []float64) []float64 {
+	improvements := make([]float64, len(jsonTimes))
+	for i := range jsonTimes {
+		improvements[i] = ((jsonTimes[i] - binlogTimes[i]) / jsonTimes[i]) * 100
+	}
+	return improvements
 }
 
 func main() {
