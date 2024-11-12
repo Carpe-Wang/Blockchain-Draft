@@ -20,14 +20,25 @@ type Record struct {
 	Value string `json:"value"`
 }
 
-// Generate random record data
+func randomString(length int) string {
+	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(result)
+}
+
+// Generate random record data with larger value field
 func generateRecords(count int) []Record {
 	records := make([]Record, count)
 	for i := 0; i < count; i++ {
+		// 使用一个较长的字符串来模拟较大的数据
+		largeValue := randomString(100 * rand.Intn(10))
 		records[i] = Record{
 			ID:    i,
 			Name:  fmt.Sprintf("name_%d", i),
-			Value: fmt.Sprintf("value_%d", rand.Intn(1000)),
+			Value: largeValue,
 		}
 	}
 	return records
