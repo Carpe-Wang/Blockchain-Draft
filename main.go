@@ -193,7 +193,7 @@ func main() {
 	)
 
 	// Use os.Create instead of open
-	f, err := os.Create("serialization_deserialization_chart.html")
+	f, err := os.Create("index.html")
 
 	if err != nil {
 		fmt.Println("Failed to create file:", err)
@@ -208,8 +208,8 @@ func main() {
 		fmt.Println("Failed to get current directory:", err)
 		return
 	}
-	filePath := currentDir + "/serialization_deserialization_chart.html"
+	filePath := currentDir + "/index.html"
 	fmt.Printf("Charts generated and saved as: %s\n", filePath)
 
-	fmt.Println("Charts generated and saved as serialization_deserialization_chart.html")
+	fmt.Println("Charts generated and saved as index.html")
 }
