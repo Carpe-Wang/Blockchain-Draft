@@ -100,7 +100,7 @@ func createLineChart(xValues []int, jsonValues, binlogValues []float64, title, y
 	line.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{Title: title}),
 		charts.WithYAxisOpts(opts.YAxis{Name: yAxisName}),
-		charts.WithXAxisOpts(opts.XAxis{Name: "Number of Records"}),
+		charts.WithXAxisOpts(opts.XAxis{Name: "Records"}),
 	)
 	line.SetXAxis(xValues).
 		AddSeries("JSON", generateLineItems(jsonValues)).
